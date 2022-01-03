@@ -1,0 +1,32 @@
+{
+  "name": "lolbot",
+  "version": "1.0.0",
+  "description": "a fun League of Legends Discord Bot",
+  "engines": {
+    "node": "16.x",
+    "npm": "8.x"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlbinMamuti/LoLBot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlbinMamuti/LoLBot/issues"
+  },
+  "homepage": "https://github.com/AlbinMamuti/LoLBot#readme",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "discord.js": "^13.5.0",
+    "dotenv": "^10.0.0",
+    "mongoose": "^6.1.4",
+    "wokcommands": "^1.5.3"
+  }
+}
