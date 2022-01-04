@@ -3,6 +3,13 @@ import dotenv from 'dotenv'
 import https from 'https'
 import axios from 'axios'
 
+dotenv.config()
+
+export async function getLiveGame(server:String, summonerPUUID:String,) {
+    const responseData = await axios.get(calcAdress(server,summonerPUUID,'liveMatch'))
+    return responseData
+}
+
 export async function getMapConstant() {
     const responseData = await axios.get("https://static.developer.riotgames.com/docs/lol/maps.json")
     return responseData
@@ -77,6 +84,8 @@ function calcAdress(server: String, summonerName: String, type: String) {
         addres += '.api.riotgames.com/lol/summoner/v4/summoners/by-name/'
     else if (type === 'rank')
         addres += '.api.riotgames.com/lol/league/v4/entries/by-summoner/'
+    else if (type === 'liveMatch')
+        addres += '.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/'
     addres += encodeURIComponent(summonerName.trim())
     addres += '?api_key=' + process.env.RIOTAPIKEY
     return addres
