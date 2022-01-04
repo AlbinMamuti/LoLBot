@@ -20,7 +20,7 @@ client.on('ready', async () => {
     console.log('The Bot is ready')
     new WOKCommands(client, {
         commandDir: path.join(__dirname, 'commands'),
-        featureDir: path.join(__dirname, 'features'),
+        //featureDir: path.join(__dirname, 'features'),
         typeScript: true,
         testServers: ['924639148659331103', '833052793866551316'],
         botOwners: ['272691075959750656'],
@@ -33,7 +33,7 @@ client.on('messageCreate', (message) => {
         message.reply({
             content: 'Pong',
         })
-    getPlayer('euw', 'Knochen MC')
+    //getPlayer('euw', 'Knochen MC')
 })
 
 client.login(process.env.TOKEN)
