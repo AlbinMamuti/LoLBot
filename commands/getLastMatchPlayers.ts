@@ -14,37 +14,37 @@ export default {
             return `The ${args[1]} could not be found on ${args[0].toLocaleUpperCase()} Server`
         const parsedData = userData.data
         const puuid = parsedData.puuid
-        const MatchIds = await getMatchPlayers(args[0],puuid)
-        if(!MatchIds)
+        const MatchIds = await getMatchPlayers(args[0], puuid)
+        if (!MatchIds)
             return '404'
         const lastMatch = await getMatchData(MatchIds.data[0])
-        if(!lastMatch)
+        if (!lastMatch)
             return '404'
         const lastMatchData = lastMatch.data
         const gameType = lastMatchData.info.gameType;
 
         let myTeamId = 0
-        let arrayOfSummonerNames = [] 
-        let arrayMyTeam:Array<Player> = []
-        let arrayEnemyTeam:Array<Player> = []
+        let arrayOfSummonerNames = []
+        let arrayMyTeam: Array<Player> = []
+        let arrayEnemyTeam: Array<Player> = []
         const maxUserNameLength = 16
         const maxChampionNameLength = 16
         let win = false
 
-        lastMatchData.info.participants.forEach((element:any) => {
+        lastMatchData.info.participants.forEach((element: any) => {
             //console.log('keke')
             arrayOfSummonerNames.push(element.summonerName)
-            if(element.summonerName.toLocaleLowerCase() === args[1].toLocaleLowerCase()){
+            if (element.summonerName.toLocaleLowerCase() === args[1].toLocaleLowerCase()) {
                 myTeamId = element.teamId;
                 win = element.win;
             }
         })
 
-        if(!myTeamId)
+        if (!myTeamId)
             return 'Error in formatting, could not find Team Id'
-        
-        lastMatchData.info.participants.forEach((element:any) => {
-            if(element.teamId === myTeamId)
+
+        lastMatchData.info.participants.forEach((element: any) => {
+            if (element.teamId === myTeamId)
                 arrayMyTeam.push({
                     name: element.summonerName,
                     kills: element.kills,
@@ -61,28 +61,28 @@ export default {
                     championPlayed: element.championName,
                 })
         })
-        const mapConst = await  getMapConstant();
+        const mapConst = await getMapConstant();
 
-        let descriptionString:String = "```asciidoc\n"
+        let descriptionString: String = "```asciidoc\n"
         descriptionString +=
-        `= Summoner${" ".repeat(maxUserNameLength-8)}Champion${" ".repeat(maxChampionNameLength-8)} K / D / A =\n\n`
+            `= Summoner${" ".repeat(maxUserNameLength - 8)}Champion${" ".repeat(maxChampionNameLength - 8)} K / D / A =\n\n`
         descriptionString +=
-        `= Your Team   ${win ? 'WIN' : 'LOSS'} =\n\n`
+            `= Your Team   ${win ? 'WIN' : 'LOSS'} =\n\n`
         arrayMyTeam.forEach((element) => {
-            descriptionString += 
-            `  ${element.name + (element.name.toLocaleLowerCase()===args[1].toLocaleLowerCase() ? ' 👑' :'' ) }${" ".repeat(maxUserNameLength-element.name.length-(element.name.toLocaleLowerCase()===args[1].toLocaleLowerCase() ? 3 :0))}${element.championPlayed}${" ".repeat(maxChampionNameLength-element.championPlayed.length)}${numberConverter(element.kills)} / ${numberConverter(element.deaths)} / ${numberConverter(element.assists)}\n`
+            descriptionString +=
+                `  ${element.name + (element.name.toLocaleLowerCase() === args[1].toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(maxUserNameLength - element.name.length - (element.name.toLocaleLowerCase() === args[1].toLocaleLowerCase() ? 4 : 0))}${element.championPlayed}${" ".repeat(maxChampionNameLength - element.championPlayed.length)}${numberConverter(element.kills)} / ${numberConverter(element.deaths)} / ${numberConverter(element.assists)}\n`
         })
         descriptionString += '\n'
-        descriptionString += 
-        `= Enemy Team   ${win ? 'LOSS' : 'WIN'} =\n\n`
+        descriptionString +=
+            `= Enemy Team   ${win ? 'LOSS' : 'WIN'} =\n\n`
         arrayEnemyTeam.forEach((element) => {
-            descriptionString += 
-            `  ${element.name}${" ".repeat(maxUserNameLength- element.name.length)}${element.championPlayed}${" ".repeat(maxChampionNameLength-element.championPlayed.length)}${numberConverter(element.kills)} / ${numberConverter(element.deaths)} / ${numberConverter(element.assists)}\n`
+            descriptionString +=
+                `  ${element.name}${" ".repeat(maxUserNameLength - element.name.length)}${element.championPlayed}${" ".repeat(maxChampionNameLength - element.championPlayed.length)}${numberConverter(element.kills)} / ${numberConverter(element.deaths)} / ${numberConverter(element.assists)}\n`
         })
         descriptionString += '```'
         let mapName = ""
-        mapConst.data.forEach((element:any) => {
-            if(element.mapId === lastMatchData.info.mapId)
+        mapConst.data.forEach((element: any) => {
+            if (element.mapId === lastMatchData.info.mapId)
                 mapName = element.mapName
         })
 
@@ -99,13 +99,13 @@ export default {
 
 } as ICommand
 
-const numberConverter = (number:Number) => {
-    if(number < 10)
+const numberConverter = (number: Number) => {
+    if (number < 10)
         return ` ${number}`
     return `${number}`
 }
 
-interface Player{
+interface Player {
     name: String
     kills: Number
     deaths: Number

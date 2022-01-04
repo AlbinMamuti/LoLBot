@@ -5,8 +5,36 @@ import axios from 'axios'
 
 dotenv.config()
 
-export async function getLiveGame(server:String, summonerPUUID:String,) {
-    const responseData = await axios.get(calcAdress(server,summonerPUUID,'liveMatch'))
+export async function getAllRankeds(server: String, summoners: Array<String>) {
+    if (summoners.length != 10)
+        return null
+    try {
+        const [MePlayer1, MePlayer2, MePlayer3, MePlayer4, MePlayer5
+            , EnemyPlayer1, EnemyPlayer2, EnemyPlayer3, EnemyPlayer4, EnemyPlayer5]
+            = await axios.all(
+                [
+                    axios.get(calcAdress(server, summoners[0], 'rank')),
+                    axios.get(calcAdress(server, summoners[1], 'rank')),
+                    axios.get(calcAdress(server, summoners[2], 'rank')),
+                    axios.get(calcAdress(server, summoners[3], 'rank')),
+                    axios.get(calcAdress(server, summoners[4], 'rank')),
+                    axios.get(calcAdress(server, summoners[5], 'rank')),
+                    axios.get(calcAdress(server, summoners[6], 'rank')),
+                    axios.get(calcAdress(server, summoners[7], 'rank')),
+                    axios.get(calcAdress(server, summoners[8], 'rank')),
+                    axios.get(calcAdress(server, summoners[9], 'rank')),
+                ]
+            );
+        return [MePlayer1, MePlayer2, MePlayer3, MePlayer4, MePlayer5
+            , EnemyPlayer1, EnemyPlayer2, EnemyPlayer3, EnemyPlayer4, EnemyPlayer5];
+    }
+    catch (err) {
+        console.log(err);
+    }
+}
+
+export async function getLiveGame(server: String, summonerPUUID: String,) {
+    const responseData = await axios.get(calcAdress(server, summonerPUUID, 'liveMatch'))
     return responseData
 }
 
@@ -15,13 +43,12 @@ export async function getMapConstant() {
     return responseData
 }
 
-export async function getMatchPlayers(server:String, summonerPUUID: String) {
-    try{
-        const responseData = await axios.get(calcAdressWeird(server,summonerPUUID))
+export async function getMatchPlayers(server: String, summonerPUUID: String) {
+    try {
+        const responseData = await axios.get(calcAdressWeird(server, summonerPUUID))
         return responseData
     }
-    catch (err)
-    {
+    catch (err) {
         console.log(err)
     }
 }
@@ -50,13 +77,13 @@ export async function getPlayer(server: String, summonerName: String,) {
         console.log(err)
     }
 }
-function calcAdressWeird(server:String, summonerPUUID: String){
+function calcAdressWeird(server: String, summonerPUUID: String) {
     server.toLocaleLowerCase()
     let addres = "https://"
-    switch(server){
+    switch (server) {
         case 'euw': addres += 'europe'; break;
-        case 'na' : addres += 'america'; break;
-        default : return '';
+        case 'na': addres += 'america'; break;
+        default: return '';
     }
     addres += '.api.riotgames.com/lol/match/v5/matches/by-puuid/'
     addres += summonerPUUID

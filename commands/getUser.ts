@@ -14,10 +14,10 @@ export default {
         if (!userData)
             return `The ${args[1]} could not be found on ${args[0].toLocaleUpperCase()} Server`
         const parsedData = userData.data
-        console.log(parsedData)
+        //console.log(parsedData)
         const RankData = await getRanked(args[0], userData.data.id)
         const parsedRank = RankData?.data
-        console.log(parsedRank)
+        //console.log(parsedRank)
         let rankedString = ''
         for (let i = 0; i < parsedRank.length; i++) {
 
@@ -27,7 +27,7 @@ export default {
                 let kda = `${parsedRank[i].wins}W / ${parsedRank[i].losses}L`
                 rankedString += ` ${kda} \n`
             }
-            else if(parsedRank[i].queueType === 'RANKED_FLEX_SR'){
+            else if (parsedRank[i].queueType === 'RANKED_FLEX_SR') {
                 let temp = parsedRank[i].tier.charAt(0).toUpperCase() + parsedRank[i].tier.slice(1).toLocaleLowerCase()
                 rankedString += "Flex: " + temp + " " + parsedRank[i].rank
                 let kda = `${parsedRank[i].wins}W / ${parsedRank[i].losses}L `
@@ -35,7 +35,7 @@ export default {
             }
         }
         //rankedString = rankedString.charAt(0).toLocaleUpperCase() + rankedString.slice(1)
-        console.log(rankedString)
+        //console.log(rankedString)
         const avaterURL = `https://ddragon.leagueoflegends.com/cdn/11.24.1/img/profileicon/${parsedData.profileIconId}.png`
         const ret = new MessageEmbed()
             .setThumbnail(avaterURL)
