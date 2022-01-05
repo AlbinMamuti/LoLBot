@@ -113,7 +113,7 @@ function calcAdress(server: String, summonerName: String, type: String) {
         addres += '.api.riotgames.com/lol/league/v4/entries/by-summoner/'
     else if (type === 'liveMatch')
         addres += '.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/'
-    addres += encodeURIComponent(summonerName.trim())
+    addres += encodeURIComponent(summonerName.toString())
     addres += '?api_key=' + process.env.RIOTAPIKEY
     return addres
 }

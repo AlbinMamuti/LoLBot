@@ -8,13 +8,13 @@ export default {
     expectedArgs: '<server> <username>',
     minArgs: 2,
     slash: 'both',
-    callback: async ({ interaction, message, args }) => {
+    callback: async ({channel, interaction, message, args }) => {
         const msgObj = interaction ? interaction : message;
         const userData = await getPlayer(args[0], args[1])
         if (!userData)
             return `The ${args[1]} could not be found on ${args[0].toLocaleUpperCase()} Server`
         const parsedData = userData.data
-        console.log(parsedData)
+        //console.log(parsedData)
         const id = parsedData.id
         //console.log(puuid)
         const liveMatch = await getLiveGame(args[0], id);
@@ -24,29 +24,36 @@ export default {
         else
             message.reply('working')
 
-        return getEmbed(liveMatch.data, args[0], args[1]);
+        const response = await getEmbed(liveMatch.data, args[0], args[1]);
+        channel.send(
+            {
+                embeds: [response] 
+            }
+        )
     },
 } as ICommand
 
 async function getEmbed(liveMatch: any, server: String, summonerName: String) {
-    console.log(liveMatch)
+    //console.log(liveMatch)
     //const players = liveMatch.CurrentGameInfo.participants;
     let myTeam: Array<Player> = []
     let enemyTeam: Array<Player> = []
     let allPlayers: Array<String> = []
     let teamIdMe: String;
+
     liveMatch.participants.forEach((element: any) => {
         if (element.summonerName.toLocaleLowerCase() === summonerName.toLocaleLowerCase())
             teamIdMe = element.teamId;
     });
-    liveMatch.participants.forEach((element: any) => {
-        if (element.teamId === myTeam)
+    //console.log(liveMatch.participants)
+    liveMatch.participants.forEach((element: any) => {      
+        if (element.teamId === teamIdMe)
             myTeam.push({
                 name: element.summonerName,
-                puuid: element.summonerID,
-                championPlayed: element.championName,
-                wins: element.wins,
-                losses: element.losses,
+                puuid: element.summonerId,
+                championPlayed: element.championId,
+                wins: -1,
+                losses: -1,
                 soloRank: '',
                 flexRank: ''
             })
@@ -54,9 +61,9 @@ async function getEmbed(liveMatch: any, server: String, summonerName: String) {
             enemyTeam.push({
                 name: element.summonerName,
                 puuid: element.summonerId,
-                championPlayed: element.championName,
-                wins: element.wins,
-                losses: element.losses,
+                championPlayed: element.championId,
+                wins: -1,
+                losses: -1,
                 soloRank: '',
                 flexRank: ''
             })
@@ -67,38 +74,96 @@ async function getEmbed(liveMatch: any, server: String, summonerName: String) {
     enemyTeam.forEach((element: Player) => {
         allPlayers.push(element.puuid)
     })
-    console.log('before')
+    //console.log('before')
     const RankInfoArray = await getAllRankeds(server, allPlayers)
-    console.log('after')
-    let RankInfoData = []
-    RankInfoArray?.forEach((element: any) => {
+    //console.log(RankInfoArray?.length)
+    //console.log(myTeam)
+    //console.log(enemyTeam)
+    //let RankInfoData = []
+    RankInfoArray?.forEach((element: any) => { //look for every Player 10 peoples 5 my Team 5 Enemy Team
+        //console.log(element)
+        const RankData = element.data
+        //console.group(RankData)
+        if(!RankData)
+            return
+        RankData.forEach((RANKINFO:any) => { //Search only for RANKED_SOLO_5x5
+            if(RANKINFO.queueType === 'RANKED_SOLO_5x5'){
+                //console.log(RANKINFO.summonerName)
+                let concatTemp = myTeam.concat(enemyTeam);
+                //console.group(RANKINFO.summonerName)
+                const index = concatTemp.findIndex(a => {
+                    //console.log(a.name, RANKINFO.summonerName)
+                    if(a.name.toLocaleLowerCase() === RANKINFO.summonerName.toLocaleLowerCase())
+                        return true
+                    return false
+                })
+                
+                //console.groupEnd()
+                //console.log("The Index is: ",index)
+                //if(index === -1){
+                //    console.log("BAD REALLY BAD")
+                //}
+                
+                //alter the object of team for RankInfo
+                if(index < 5) {
+                    //console.log(myTeam[index])
+                    myTeam[index].soloRank = `${RANKINFO.tier.charAt(0) + RANKINFO.tier.slice(1).toLocaleLowerCase()} ${RANKINFO.rank}`
+                    myTeam[index].wins = RANKINFO.wins
+                    myTeam[index].losses = RANKINFO.losses
+                }
+                else{
+                    //console.log(enemyTeam)
+                    //console.log(enemyTeam[index-5])
+                    enemyTeam[index-5].soloRank = `${RANKINFO.tier.charAt(0) + RANKINFO.tier.slice(1).toLocaleLowerCase()} ${RANKINFO.rank}`
+                    enemyTeam[index-5].wins = RANKINFO.wins
+                    enemyTeam[index-5].losses = RANKINFO.losses
+                }
+            }
+        })
+        //console.groupEnd()
 
     })
+    //console.log()
+    //console.log()
+    console.log(myTeam) 
+    console.log(enemyTeam)
     const mapeId = liveMatch.mapeId
-
+    
+    
 
 
     let description: String = "```asciidoc\n"
-    description += `\n`
+    description += `= Summoner${" ".repeat(18 - 8)}Champion${" ".repeat(1)}RankedSolo${" ".repeat(3)}K / D / A =\n\n`
     for (let i = 0; i < 5; i++) {
-        console.log(myTeam[i])
-        description += `  ${allPlayers[i] + (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(16 - myTeam[i].name.length - (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 4 : 0))}`; //PlayerName with indication who is who
+        //console.log(myTeam[i])
+        description += `  ${myTeam[i].name + (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(18 - myTeam[i].name.length - (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 4 : 0))}`; //PlayerName with indication who is who
 
-        description += `${myTeam[i].championPlayed}${" ".repeat(16 - myTeam[i].championPlayed.length)}`;
-        const tempString: String = trimRank(myTeam[i])
-        description += `${tempString}${" ".repeat(10 - tempString.length)}`;
+        const championPlayed: String = myTeam[i].championPlayed.toString()
+        //console.log(championPlayed.toString().length)
+        description += `${championPlayed}${" ".repeat(5 - championPlayed.length)}`;
+        //console.log(description)
+        const tempString: String = myTeam[i].soloRank
+        //console.log(tempString)
+        description += `${tempString}${" ".repeat(16 - tempString.length)}`;
         description += `${myTeam[i].wins}/${myTeam[i].losses}`
+        description += `\n`
     }
     description += `\n`
     for (let i = 0; i < 5; i++) {
-        description += `  ${allPlayers[i + 5] + (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(16 - enemyTeam[i].name.length - (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 4 : 0))}`; //PlayerName with indication who is who
+        description += `  ${enemyTeam[i].name + (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(18 - enemyTeam[i].name.length - (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 4 : 0))}`; //PlayerName with indication who is who
+        
+        const championPlayed: String = enemyTeam[i].championPlayed.toString()
+        console.log(championPlayed.length)
+        description += `${championPlayed}${" ".repeat(5 - championPlayed.length)}`;
 
-        description += `${enemyTeam[i].championPlayed}${" ".repeat(16 - enemyTeam[i].championPlayed.length)}`;
-        const tempString: String = trimRank(enemyTeam[i])
-        description += `${tempString}${" ".repeat(10 - tempString.length)}`;
+        const tempString: String = enemyTeam[i].soloRank
+        description += `${tempString}${" ".repeat(16 - tempString.length)}`;
         description += `${enemyTeam[i].wins}/${enemyTeam[i].losses}`
+        description += `\n`
     }
+    
     description += "```"
+    console.log(description)
     const ret = new MessageEmbed()
         .setDescription(`${description}`)
         .setColor('AQUA')
