@@ -17,7 +17,7 @@ export default {
         //console.log(parsedData)
         const RankData = await getRanked(args[0], userData.data.id)
         const parsedRank = RankData?.data
-        //console.log(parsedRank)
+        console.log(parsedRank)
         let rankedString = ''
         for (let i = 0; i < parsedRank.length; i++) {
 

@@ -2,9 +2,37 @@ import fetch from 'node-fetch'
 import dotenv from 'dotenv'
 import https from 'https'
 import axios from 'axios'
+//import champions from './champion.json'
+import maps from './maps.json'
 
 dotenv.config()
+const getVersion = async () => { try { return (await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')).data[0] } catch (err) { } };
+//const currVersion = await getVersion();
+let currVersion: string
+let champions: any
+const getChampions = async () => { try { return await axios.get(`http://ddragon.leagueoflegends.com/cdn/${currVersion}/data/en_US/champion.json`) } catch (err) { console.log(err) } };
+//const champions = await getChampions();
 
+export async function getChampionById(championId: string) {
+    if (!currVersion)
+        currVersion = await getVersion()
+    if (!champions) {
+        champions = (await getChampions())?.data;
+    }
+    var championsObj: string
+    for (championsObj in champions.data) {
+        //@ts-ignore
+        const id: String = champions.data[championsObj]['key']
+        const idNumber: number = +id
+        const championIdNumber: number = +championId
+        //@ts-ignore
+        const name: String = champions.data[championsObj]['id']
+        if (idNumber === championIdNumber) {
+            return name
+        }
+    }
+    return ' '
+}
 export async function getAllRankeds(server: String, summoners: Array<String>) {
     if (summoners.length != 10)
         return null
@@ -34,8 +62,18 @@ export async function getAllRankeds(server: String, summoners: Array<String>) {
 }
 
 export async function getLiveGame(server: String, summonerPUUID: String,) {
-    const responseData = await axios.get(calcAdress(server, summonerPUUID, 'liveMatch'))
-    return responseData
+    try {
+        const responseData = await axios.get(calcAdress(server, summonerPUUID, 'liveMatch'))
+        return responseData
+    } catch (err: any) {
+        console.log(err)
+    }
+}
+
+export function getMapById(searchMapId: number) {
+    let response
+    maps.forEach((entry: any) => { if (entry.mapId === searchMapId) response = entry.mapName })
+    return response
 }
 
 export async function getMapConstant() {
