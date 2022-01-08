@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import https from 'https'
 import axios from 'axios'
 //import champions from './champion.json'
+import summonerNameSchema from '../models/usernames'
 import maps from './maps.json'
 
 dotenv.config()
@@ -12,6 +13,12 @@ let currVersion: string
 let champions: any
 const getChampions = async () => { try { return await axios.get(`http://ddragon.leagueoflegends.com/cdn/${currVersion}/data/en_US/champion.json`) } catch (err) { console.log(err) } };
 //const champions = await getChampions();
+
+export async function getSummonerNameByDiscordId(discordId: String) {
+    const lolName = await summonerNameSchema.findById({ _id: discordId });
+    //console.log(lolName);
+    return lolName;
+}
 
 export async function getChampionById(championId: string) {
     if (!currVersion)
@@ -66,7 +73,8 @@ export async function getLiveGame(server: String, summonerPUUID: String,) {
         const responseData = await axios.get(calcAdress(server, summonerPUUID, 'liveMatch'))
         return responseData
     } catch (err: any) {
-        console.log(err)
+        console.group("ERROR GETLIVEGAME:\n", err.config.url, "\n", err.response.status)
+        console.groupEnd()
     }
 }
 
