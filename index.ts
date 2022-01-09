@@ -7,7 +7,7 @@ import { getLiveGame, getPlayer, getSummonerNameByDiscordId } from './riotApi/ro
 import { getLiveMatchEmbed } from './riotApi/liveMatch'
 dotenv.config()
 
-var LeagueUserCache: Array<LeaguePlayer> = []
+var LeagueUserCache: Array<LeaguePlayer> = [{ userId: '1', timeStamp: 999999999999999999999999 }]
 
 const client = new DiscordJS.Client({
     intents: [
@@ -40,14 +40,15 @@ client.on('messageCreate', (message) => {
 })
 
 
-
-const delay: number = 600000
+//TODO : ONLY FOR RANK/NORMAL SUMMONERS RIFT OR ELSE BREAKS 
+//TODO : STOP SPOTIFY CHANGES OR EVERYTHING ELSE!!! new cache prob
+const delay: number = 120000
 
 //Function to automatically report to the DiscordUser their ingame
 //live Data on a League of Legends Game, it will only work if they
 //added their SummonerName or told the LolBot their SummonerName
 client.on('presenceUpdate', async (oldPresence, newPresence) => {
-
+    console.log(LeagueUserCache)
     //some if's so we dont spam every time
     if (newPresence.activities.length === 0)
         return
@@ -56,6 +57,7 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
         if (element.name === 'League of Legends' && element.state === 'In Game')
             activity = element
     })
+    console.log(activity)
     const guild = newPresence.guild;
     if (!guild) return
     const textChannel = guild.channels.cache.find((channel) => { return channel.type === 'GUILD_TEXT' }) as DiscordJS.TextChannel
@@ -76,15 +78,17 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
 
     //cooldown for each individual Member / League Player, we cache every single one and look if there creation
     //timestamp + delay is lower then Date.now()    
+    console.log('---------- working --------')
     const temp: Array<LeaguePlayer> = (LeagueUserCache.filter(Player => {
         Player.userId === newPresence.userId
     }))
-    if (temp.length === 0)
-        return
-    const playerDelay = temp[0]
-    if (playerDelay.timeStamp + delay > Date.now())
-        return //return if cooldown is not finished 
+    console.log(temp)
+    if (temp.length !== 0) {
 
+        const playerDelay = temp[0]
+        if (playerDelay.timeStamp + delay > Date.now())
+            return //return if cooldown is not finished 
+    }
     //delete player from cache
     LeagueUserCache = LeagueUserCache.filter(element => { return element.userId !== newPresence.userId })
 
@@ -97,11 +101,12 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
         return
     const parsedData = userData.data
     const id = parsedData.id
+    console.log(id)
     //fetch liveGame data if there is already a liveGame
     const liveMatch = await getLiveGame(server, id);
     if (!liveMatch)
         return
-
+    console.log('--------------')
     //cache current suspect for cooldown     
     const LP: LeaguePlayer = {
         userId: newPresence.userId,
@@ -111,6 +116,7 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
 
     //getLiveMatchEmbed creates the Embed with the Data
     const responseEmbed = await getLiveMatchEmbed(liveMatch.data, server, summonerName);
+    console.log(responseEmbed);
     textChannel.send({
         embeds: [responseEmbed],
 
