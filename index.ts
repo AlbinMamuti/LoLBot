@@ -78,7 +78,7 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
 
     //cooldown for each individual Member / League Player, we cache every single one and look if there creation
     //timestamp + delay is lower then Date.now()    
-    console.log('---------- working --------')
+    //console.log('---------- working --------')
     const temp: Array<LeaguePlayer> = (LeagueUserCache.filter(Player => {
         Player.userId === newPresence.userId
     }))
@@ -101,12 +101,12 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
         return
     const parsedData = userData.data
     const id = parsedData.id
-    console.log(id)
+    //console.log(id)
     //fetch liveGame data if there is already a liveGame
     const liveMatch = await getLiveGame(server, id);
     if (!liveMatch)
         return
-    console.log('--------------')
+    //console.log('--------------')
     //cache current suspect for cooldown     
     const LP: LeaguePlayer = {
         userId: newPresence.userId,
