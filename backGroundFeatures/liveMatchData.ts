@@ -11,11 +11,11 @@ import {
 //added their SummonerName or told the LolBot their SummonerName
 
 //var ApplicatedUsers: Array<ApplicatedLeaguePlayers> = [];
-
+var LiveGamesProccessed: Array<number> = [];
 var LeagueUserCache: Array<LeaguePlayer> = [
   { userId: "1", timeStamp: 999999999999999999999999 },
 ];
-const delay: number = 120000;
+const delay: number = 900000;
 
 /**
  * A Function that checks if a certain player is in a League of Legends Summoners
@@ -25,11 +25,13 @@ const delay: number = 120000;
  */
 
 export async function checkAndSend(newPresence: DiscordJs.Presence) {
+
+  console.log(`Entered checkAndSend with ${newPresence.user?.username}`)
   if (!newPresence.guild)
     return
 
   if (newPresence.activities.length === 0) return;
-  console.log(newPresence.activities)
+
   let activity: DiscordJs.Activity | null = null;
   newPresence.activities.forEach((element) => {
     if (element.name === "League of Legends" && element.state === "In Game")
@@ -60,37 +62,44 @@ export async function checkAndSend(newPresence: DiscordJs.Presence) {
   //cooldown for each individual Member / League Player, we cache every single one and look if there creation
   //timestamp + delay is lower then Date.now()
   //console.log('---------- working --------')
-  const temp: Array<LeaguePlayer> = LeagueUserCache.filter((Player) => {
+  const temp: LeaguePlayer | undefined = LeagueUserCache.find((Player) => {
     Player.userId === newPresence.userId;
   });
-  if (temp.length !== 0) {
-    const playerDelay = temp[0];
-    if (playerDelay.timeStamp + delay > Date.now()) return; //return if cooldown is not finished
+  if (temp === undefined || !temp) {
+    //cache current suspect for cooldown
+    const LP: LeaguePlayer = {
+      userId: newPresence.userId,
+      timeStamp: Date.now(),
+    };
+    LeagueUserCache.push(LP);
   }
-  //delete player from cache
-  LeagueUserCache = LeagueUserCache.filter((element) => {
-    return element.userId !== newPresence.userId;
-  });
-
+  else if (temp.timeStamp + delay > Date.now())
+    return; //return if cooldown is not finished
+  else {
+    //delete player from cache
+    LeagueUserCache = LeagueUserCache.filter((element) => {
+      return element.userId !== newPresence.userId;
+    });
+  }
+  console.group(`Ready to Fetch data for LiveMatchEmbed`)
   const summonerName = response._summonerName;
   const server = response._server;
 
   //fetch Player data
   const userData = await getPlayer(server, summonerName);
-  if (!userData) return;
+  if (!userData) { console.groupEnd(); return };
   const parsedData = userData.data;
   const id = parsedData.id;
   //console.log(id)
   //fetch liveGame data if there is already a liveGame
   const liveMatch = await getLiveGame(server, id);
-  if (!liveMatch) return;
+  if (!liveMatch) { console.groupEnd(); return };
   //console.log('--------------')
-  //cache current suspect for cooldown
-  const LP: LeaguePlayer = {
-    userId: newPresence.userId,
-    timeStamp: Date.now(),
-  };
-  LeagueUserCache.push(LP);
+
+  //check if game was already processed!
+  const alreadyProccessed = LiveGamesProccessed.find(ell => ell === liveMatch.data.gameId);
+  if (alreadyProccessed)
+    return //game was allready processed!
 
   //getLiveMatchEmbed creates the Embed with the Data
   const responseEmbed = await getLiveMatchEmbed(
@@ -101,6 +110,8 @@ export async function checkAndSend(newPresence: DiscordJs.Presence) {
   textChannel.send({
     embeds: [responseEmbed],
   });
+  console.log('Exiting: Succes for LiveMatchEmbed');
+  console.groupEnd();
 }
 
 //console.log(isSub('272691075959750656', '924639148659331103'));

@@ -9,8 +9,6 @@ import { checkAndSend } from './backGroundFeatures/liveMatchData'
 import { track } from './backGroundFeatures/trackPlayTime'
 dotenv.config()
 
-var LeagueUserCache: Array<LeaguePlayer> = [{ userId: '1', timeStamp: 999999999999999999999999 }]
-
 const client = new DiscordJS.Client({
     intents: [
         Intents.FLAGS.GUILDS,
@@ -49,15 +47,9 @@ client.on('messageCreate', (message) => {
 //live Data on a League of Legends Game, it will only work if they
 //added their SummonerName or told the LolBot their SummonerName
 client.on('presenceUpdate', async (oldPresence, newPresence) => {
-    //checkAndSend(newPresence);
+    checkAndSend(newPresence);
     //console.log(newPresence.activities)
     track(newPresence)
 })
 
 client.login(process.env.TOKEN)
-
-interface LeaguePlayer {
-    userId: String,
-    timeStamp: number,
-
-}

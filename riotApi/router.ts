@@ -5,6 +5,7 @@ import axios from 'axios'
 //import champions from './champion.json'
 import summonerNameSchema from '../models/usernames'
 import maps from './maps.json'
+import { CurrentGameInfo, LeagueEntryDTO } from './ApiInterfaces/ApiInterfaces'
 
 dotenv.config()
 const getVersion = async () => { try { return (await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')).data[0] } catch (err) { } };
@@ -63,8 +64,10 @@ export async function getAllRankeds(server: String, summoners: Array<String>) {
         return [MePlayer1, MePlayer2, MePlayer3, MePlayer4, MePlayer5
             , EnemyPlayer1, EnemyPlayer2, EnemyPlayer3, EnemyPlayer4, EnemyPlayer5];
     }
-    catch (err) {
-        console.log(err);
+    catch (err: any) {
+        console.group("ERROR GETALLRANKDES:\n")
+        console.error(err.config.url, "\n", err.response)
+        console.groupEnd()
     }
 }
 
@@ -73,15 +76,15 @@ export async function getLiveGame(server: String, summonerPUUID: String,) {
         const responseData = await axios.get(calcAdress(server, summonerPUUID, 'liveMatch'))
         return responseData
     } catch (err: any) {
-        console.group("ERROR GETLIVEGAME:\n", err.config.url, "\n", err.response.status)
+        console.group("ERROR GETLIVEGAMES:\n")
+        console.error(err.config.url, "\n", err.response.status)
         console.groupEnd()
     }
 }
 
 export function getMapById(searchMapId: number) {
-    let response
-    maps.forEach((entry: any) => { if (entry.mapId === searchMapId) response = entry.mapName })
-    return response
+    const resp = maps.find((entry: any) => { entry.mapId === searchMapId })
+    return resp
 }
 
 export async function getMapConstant() {
@@ -94,16 +97,20 @@ export async function getMatchPlayers(server: String, summonerPUUID: String) {
         const responseData = await axios.get(calcAdressWeird(server, summonerPUUID))
         return responseData
     }
-    catch (err) {
-        console.log(err)
+    catch (err: any) {
+        console.group("ERROR GETMATCHPLAYERS:\n")
+        console.error(err.config.url, "\n", err.response.status)
+        console.groupEnd()
     }
 }
 export async function getMatchData(matchID: String) {
     try {
         const responseData = await axios.get(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${process.env.RIOTAPIKEY}`)
         return responseData
-    } catch (error) {
-        console.log(error)
+    } catch (err: any) {
+        console.group("ERROR GETMATCHDATA:\n")
+        console.error(err.config.url, "\n", err.response.status)
+        console.groupEnd()
     }
 }
 
@@ -111,16 +118,20 @@ export async function getRanked(server: String, summonerID: String,) {
     try {
         const responseData = await axios.get(calcAdress(server, summonerID, 'rank'))
         return responseData
-    } catch (err) {
-        console.log(err)
+    } catch (err: any) {
+        console.group("ERROR GETRANKED:\n")
+        console.error(err.config.url, "\n", err.response.status)
+        console.groupEnd()
     }
 }
 export async function getPlayer(server: String, summonerName: String,) {
     try {
         const responseData = await axios.get(calcAdress(server, summonerName, 'summoner'))
         return responseData
-    } catch (err) {
-        console.log(err)
+    } catch (err: any) {
+        console.group("ERROR GETPLAYER:\n")
+        console.error(err.config.url, "\n", err.response.status)
+        console.groupEnd()
     }
 }
 function calcAdressWeird(server: String, summonerPUUID: String) {

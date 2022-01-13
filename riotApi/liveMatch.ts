@@ -1,4 +1,5 @@
 import { MessageEmbed } from "discord.js";
+import { LeagueEntryDTO } from "./ApiInterfaces/ApiInterfaces";
 import { getAllRankeds, getChampionById, getMapById } from "./router";
 
 export async function getLiveMatchEmbed(liveMatch: any, server: String, summonerName: String) {
@@ -45,11 +46,11 @@ export async function getLiveMatchEmbed(liveMatch: any, server: String, summoner
     const RankInfoArray = await getAllRankeds(server, allPlayers)
 
     RankInfoArray?.forEach((element: any) => { //look for every Player 10 peoples 5 my Team 5 Enemy Team
-        const RankData = element.data
+        const RankData: Set<LeagueEntryDTO> = element.data
         if (!RankData) {
             return
         }
-        RankData.forEach((RANKINFO: any) => { //Search only for RANKED_SOLO_5x5
+        RankData.forEach((RANKINFO: LeagueEntryDTO) => { //Search only for RANKED_SOLO_5x5
             if (RANKINFO.queueType === 'RANKED_SOLO_5x5') {
                 let concatTemp = myTeam.concat(enemyTeam);
                 const index = concatTemp.findIndex(a => {

@@ -50,6 +50,15 @@ export async function track(presence: DiscordJs.Presence) {
     console.groupEnd()
 }
 
+
+
+
+/**
+ * Saves gameDuration for specific user
+ * @param gameDuration 
+ * @param userId 
+ * @param guildId 
+ */
 async function saveGameDuration(gameDuration: number, userId: String, guildId: String) {
     console.log('Entered saveGameDuration with args', gameDuration, userId, guildId)
     await timePlayed.findByIdAndUpdate({

@@ -28,6 +28,8 @@ const timePlayed = new Schema({
 
     _timePlayedMS: reqNumber,
 
+    _lastGameID: reqString,
+
     _sinceTimeStamp: reqDate,
 })
 

@@ -134,11 +134,15 @@ async function getEmbed(liveMatch: any, server: String, summonerName: String) {
     }
     description += "```"
     //console.log(description)
+    const timeHHMMSS = (new Date().toTimeString()).split(' ')[0].slice(0, -3);
     const ret = new MessageEmbed()
         .setDescription(`${description}`)
         .setColor('AQUA')
         .setAuthor({
             name: `Live Match Played by ${summonerName} on ${map}`
+        })
+        .setFooter({
+            text: `${timeHHMMSS}`
         })
     return ret;
 }
