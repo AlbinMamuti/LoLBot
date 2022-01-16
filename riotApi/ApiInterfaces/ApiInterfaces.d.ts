@@ -36,10 +36,10 @@ declare interface CurrentGameInfo {
     gameStartTime: Number,
     mapId: Number,
     gameLength: Number,
-    platformId: String,
+    platformId?: String,
     gameMode: String,
-    bannedChampions: Array<BannedChampion>,
-    gameQueueConfigId: Observer,
+    bannedChampions?: Array<BannedChampion>,
+    obervers?: Observer,
     participants: Array<CurrentGameParticipant>
 }
 declare interface BannedChampion {
@@ -52,7 +52,7 @@ declare interface Observer {
 }
 declare interface CurrentGameParticipant {
     championId: Number,
-    perks: Perks,
+    perks: Perks | undefined,
     profileIconId: Number,
     bot: Boolean,
     teamId: Number,
@@ -71,5 +71,15 @@ declare interface GameCustomizationObject {
     category: String,
     content: String,
 }
-
-export { SummonerDTO, LeagueEntryDTO, MiniSeriesDTO, CurrentGameInfo, CurrentGameParticipant, Perks, GameCustomizationObject, Observer, BannedChampion, }
+declare interface ChampionMasteryDTO {
+    championPointsUntilNextLevel: Number,
+    chestGranted: Boolean,
+    championId: Number,
+    lastPlayTime: Number,
+    championLevel: Number,
+    summonerId: String,
+    championPoints: Number,
+    championPointsSinceLastLevel: Number,
+    tokensEarned: Number
+}
+export { SummonerDTO, LeagueEntryDTO, MiniSeriesDTO, CurrentGameInfo, CurrentGameParticipant, Perks, GameCustomizationObject, Observer, BannedChampion, ChampionMasteryDTO}

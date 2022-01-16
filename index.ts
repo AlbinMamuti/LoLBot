@@ -5,8 +5,10 @@ import mongoose from 'mongoose'
 import path from 'path'
 import { getLiveGame, getPlayer, getSummonerNameByDiscordId } from './riotApi/router'
 import { getLiveMatchEmbed } from './riotApi/liveMatch'
-import { checkAndSend } from './backGroundFeatures/liveMatchData'
+import { checkAndSend, reactionPlayerDetails } from './backGroundFeatures/liveMatchData'
 import { track } from './backGroundFeatures/trackPlayTime'
+import colors from 'colors'
+import { installEmojis } from './riotApi/getEmojis'
 dotenv.config()
 
 const client = new DiscordJS.Client({
@@ -20,7 +22,7 @@ const client = new DiscordJS.Client({
 })
 
 client.on('ready', async () => {
-    console.log('The Bot is ready')
+    console.log(colors.cyan('The Bot is ready'))
     new WOKCommands(client, {
         commandDir: path.join(__dirname, 'commands'),
         //featureDir: path.join(__dirname, 'features'),
@@ -29,7 +31,14 @@ client.on('ready', async () => {
         botOwners: ['272691075959750656'],
         mongoUri: process.env.MONGO_DB_ADRESS,
     })
+    const Channel = (client.channels.cache.get('925528643571179550') as DiscordJS.TextBasedChannel)
+    //console.log(Channel);
+    const msg = await Channel.messages.fetch('931947219370795058');
+    //console.log(msg);
+    //console.log(Channel.messages.cache.values());
 
+    //install emojis
+    //installEmojis(client);
 })
 
 client.on('messageCreate', (message) => {
@@ -47,9 +56,23 @@ client.on('messageCreate', (message) => {
 //live Data on a League of Legends Game, it will only work if they
 //added their SummonerName or told the LolBot their SummonerName
 client.on('presenceUpdate', async (oldPresence, newPresence) => {
-    checkAndSend(newPresence);
+    await checkAndSend(newPresence);
     //console.log(newPresence.activities)
     track(newPresence)
+})
+
+
+
+client.on('messageReactionAdd', async (reaction, user) => {
+    if (!(reaction instanceof DiscordJS.MessageReaction)){
+        console.log('first')
+        return;
+    }
+    else if(user.bot){
+        console.log('second')
+        return;
+    }
+    reactionPlayerDetails(reaction)
 })
 
 client.login(process.env.TOKEN)

@@ -1,6 +1,7 @@
-import { MessageEmbed } from "discord.js";
+import { Client, MessageEmbed } from "discord.js";
 import { ICommand } from "wokcommands";
 import { getPlayer, getRanked } from "../riotApi/router";
+
 export default {
 
     category: 'League of Legends User',
@@ -9,7 +10,7 @@ export default {
     expectedArgs: '<server> <username>',
     minArgs: 2,
     slash: 'both',
-    callback: async ({ interaction, message, args }) => {
+    callback: async ({ interaction, message, args, client }) => {
         const userData = await getPlayer(args[0], args[1])
         if (!userData)
             return `The ${args[1]} could not be found on ${args[0].toLocaleUpperCase()} Server`
@@ -17,7 +18,7 @@ export default {
         //console.log(parsedData)
         const RankData = await getRanked(args[0], userData.data.id)
         const parsedRank = RankData?.data
-        console.log(parsedRank)
+        //console.log(parsedRank)
         let rankedString = ''
         for (let i = 0; i < parsedRank.length; i++) {
 

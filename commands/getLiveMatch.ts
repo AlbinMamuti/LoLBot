@@ -1,5 +1,6 @@
 import { MessageEmbed, UserFlags } from "discord.js";
 import { ICommand } from "wokcommands";
+import { CurrentGameInfo } from "../riotApi/ApiInterfaces/ApiInterfaces";
 import { getAllRankeds, getChampionById, getLiveGame, getMapById, getMapConstant, getMatchData, getMatchPlayers, getPlayer, getRanked } from "../riotApi/router";
 export default {
     category: 'League of Legends Match',
@@ -33,11 +34,15 @@ export default {
     },
 } as ICommand
 
-async function getEmbed(liveMatch: any, server: String, summonerName: String) {
+//update for not only 10 players!
+
+async function getEmbed(liveMatch: CurrentGameInfo, server: String, summonerName: String) {
     let myTeam: Array<Player> = []
     let enemyTeam: Array<Player> = []
     let allPlayers: Array<String> = []
     let teamIdMe: String;
+    if (liveMatch.participants.length !== 10)
+        return new MessageEmbed().setDescription('Still working on this feature, nothing to see here');
     liveMatch.participants.forEach((element: any) => {
         if (element.summonerName.toLocaleLowerCase() === summonerName.toLocaleLowerCase())
             teamIdMe = element.teamId;
@@ -105,7 +110,7 @@ async function getEmbed(liveMatch: any, server: String, summonerName: String) {
             }
         })
     })
-    const map = getMapById(liveMatch.mapeId)
+    const map = getMapById(liveMatch.mapId.valueOf())
 
 
     let description: String = "```asciidoc\n"

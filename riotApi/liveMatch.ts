@@ -1,8 +1,8 @@
 import { MessageEmbed } from "discord.js";
-import { LeagueEntryDTO } from "./ApiInterfaces/ApiInterfaces";
-import { getAllRankeds, getChampionById, getMapById } from "./router";
+import { CurrentGameInfo, LeagueEntryDTO } from "./ApiInterfaces/ApiInterfaces";
+import { getAllRankeds, getChampionById, getMapById, getRankeds } from "./router";
 
-export async function getLiveMatchEmbed(liveMatch: any, server: String, summonerName: String) {
+export async function getLiveMatchEmbed(liveMatch: CurrentGameInfo, server: String, summonerName: String) {
     let myTeam: Array<Player> = []
     let enemyTeam: Array<Player> = []
     let allPlayers: Array<String> = []
@@ -33,53 +33,39 @@ export async function getLiveMatchEmbed(liveMatch: any, server: String, summoner
                 flexRank: 'Unranked'
             })
     });
+
     myTeam.forEach((element: Player) => {
-        //element.championPlayed = await getChampionById(element.championPlayed.toString())
-        //console.log(element.championPlayed)
         allPlayers.push(element.puuid)
     })
     enemyTeam.forEach((element: Player) => {
-        //element.championPlayed = await getChampionById(element.championPlayed.toString())
-        //console.log(element.championPlayed)
         allPlayers.push(element.puuid)
     })
-    const RankInfoArray = await getAllRankeds(server, allPlayers)
-
-    RankInfoArray?.forEach((element: any) => { //look for every Player 10 peoples 5 my Team 5 Enemy Team
-        const RankData: Set<LeagueEntryDTO> = element.data
-        if (!RankData) {
-            return
-        }
-        RankData.forEach((RANKINFO: LeagueEntryDTO) => { //Search only for RANKED_SOLO_5x5
-            if (RANKINFO.queueType === 'RANKED_SOLO_5x5') {
-                let concatTemp = myTeam.concat(enemyTeam);
-                const index = concatTemp.findIndex(a => {
-                    if (a.name.toLocaleLowerCase() === RANKINFO.summonerName.toLocaleLowerCase())
-                        return true
-                    return false
-                })
-                if (index === -1) {
-                    return
-                }
-                if (index < 5) {
-                    myTeam[index].soloRank = `${RANKINFO.tier.charAt(0) + RANKINFO.tier.slice(1).toLocaleLowerCase()} ${RANKINFO.rank}`
-                    myTeam[index].wins = RANKINFO.wins
-                    myTeam[index].losses = RANKINFO.losses
-                }
-                else {
-                    enemyTeam[index - 5].soloRank = `${RANKINFO.tier.charAt(0) + RANKINFO.tier.slice(1).toLocaleLowerCase()} ${RANKINFO.rank}`
-                    enemyTeam[index - 5].wins = RANKINFO.wins
-                    enemyTeam[index - 5].losses = RANKINFO.losses
-                }
+    const RankInfoArray = await getRankeds(server, allPlayers)
+    for (let i = 0; i < RankInfoArray.length - enemyTeam.length; i++) {
+        RankInfoArray[i].forEach((entry: LeagueEntryDTO) => {
+            if (entry.queueType === 'RANKED_SOLO_5x5') {
+                myTeam[i].soloRank = `${entry.tier.charAt(0) + entry.tier.slice(1).toLocaleLowerCase()} ${entry.rank}`
+                myTeam[i].wins = entry.wins
+                myTeam[i].losses = entry.losses
             }
         })
-    })
-    const map = getMapById(liveMatch.mapeId)
+    }
+    for (let i = RankInfoArray.length - myTeam.length; i < RankInfoArray.length; i++) {
+        RankInfoArray[i].forEach((entry: LeagueEntryDTO) => {
+            if (entry.queueType === 'RANKED_SOLO_5x5') {
+                const index = i - enemyTeam.length
+                enemyTeam[index].soloRank = `${entry.tier.charAt(0) + entry.tier.slice(1).toLocaleLowerCase()} ${entry.rank}`
+                enemyTeam[index].wins = entry.wins
+                enemyTeam[index].losses = entry.losses
+            }
+        })
+    }
+    const map = getMapById(liveMatch.mapId.valueOf());
 
 
     let description: String = "```asciidoc\n"
     description += `= Summoner${" ".repeat(18 - 8)}Champion${" ".repeat(8)}RankedSolo${" ".repeat(6)}W/L =\n\n`
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < myTeam.length; i++) {
         description += `  ${myTeam[i].name + (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(18 - myTeam[i].name.length - (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 4 : 0))}`; //PlayerName with indication who is who
         //console.log(myTeam[i])
         const championPlayed: String = await getChampionById(myTeam[i].championPlayed.toString())
@@ -91,7 +77,7 @@ export async function getLiveMatchEmbed(liveMatch: any, server: String, summoner
         description += `\n`
     }
     description += `\n`
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < enemyTeam.length; i++) {
         description += `  ${enemyTeam[i].name + (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(18 - enemyTeam[i].name.length - (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 4 : 0))}`; //PlayerName with indication who is who
         const championPlayed: String = await getChampionById(enemyTeam[i].championPlayed.toString())
         //console.log(championPlayed.length)
@@ -107,7 +93,7 @@ export async function getLiveMatchEmbed(liveMatch: any, server: String, summoner
         .setDescription(`${description}`)
         .setColor('AQUA')
         .setAuthor({
-            name: `Live Match Played by ${summonerName} on ${map}`
+            name: `Live Match Played by ${summonerName}`
         })
     return ret;
 }

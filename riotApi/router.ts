@@ -1,13 +1,12 @@
-import fetch from 'node-fetch'
 import dotenv from 'dotenv'
-import https from 'https'
+import path from 'path'
 import axios from 'axios'
-//import champions from './champion.json'
+import colors from 'colors'
 import summonerNameSchema from '../models/usernames'
 import maps from './maps.json'
-import { CurrentGameInfo, LeagueEntryDTO } from './ApiInterfaces/ApiInterfaces'
+import { LeagueEntryDTO } from './ApiInterfaces/ApiInterfaces'
 
-dotenv.config()
+dotenv.config({ path: path.resolve(__dirname, '../.env') })
 const getVersion = async () => { try { return (await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')).data[0] } catch (err) { } };
 //const currVersion = await getVersion();
 let currVersion: string
@@ -17,7 +16,6 @@ const getChampions = async () => { try { return await axios.get(`http://ddragon.
 
 export async function getSummonerNameByDiscordId(discordId: String) {
     const lolName = await summonerNameSchema.findById({ _id: discordId });
-    //console.log(lolName);
     return lolName;
 }
 
@@ -41,6 +39,26 @@ export async function getChampionById(championId: string) {
     }
     return ' '
 }
+//getRankeds('euw', ['qDbDCA6JRy1UMfRyDm6w3ygDQx-hL7rbYrxZDB0hk0iRh0Q', 'qDbDCA6JRy1UMfRyDm6w3ygDQx-hL7rbYrxZDB0hk0iRh0Q']);
+
+export async function getRankeds(server: String, summoners: String[]) {
+    const endpoints: String[] = summoners.map((summoner: String) => {
+        return calcAdress(server, summoner, 'rank');
+    });
+    //console.log(endpoints);
+    try {
+        const response = await axios.all(endpoints.map((endpoint) => axios.get(endpoint.valueOf())))
+        const responeData: LeagueEntryDTO[][] = response.map((ell) => { return ell.data });
+        //console.log(responeData)
+        return responeData;
+    } catch (err: any) {
+        console.group("ERROR GETALLRANKDES:\n")
+        errorHandler(err)
+        console.groupEnd()
+        return [];
+    }
+}
+
 export async function getAllRankeds(server: String, summoners: Array<String>) {
     if (summoners.length != 10)
         return null
@@ -66,7 +84,7 @@ export async function getAllRankeds(server: String, summoners: Array<String>) {
     }
     catch (err: any) {
         console.group("ERROR GETALLRANKDES:\n")
-        console.error(err.config.url, "\n", err.response)
+        errorHandler(err)
         console.groupEnd()
     }
 }
@@ -77,7 +95,7 @@ export async function getLiveGame(server: String, summonerPUUID: String,) {
         return responseData
     } catch (err: any) {
         console.group("ERROR GETLIVEGAMES:\n")
-        console.error(err.config.url, "\n", err.response.status)
+        errorHandler(err)
         console.groupEnd()
     }
 }
@@ -99,7 +117,7 @@ export async function getMatchPlayers(server: String, summonerPUUID: String) {
     }
     catch (err: any) {
         console.group("ERROR GETMATCHPLAYERS:\n")
-        console.error(err.config.url, "\n", err.response.status)
+        errorHandler(err)
         console.groupEnd()
     }
 }
@@ -109,7 +127,7 @@ export async function getMatchData(matchID: String) {
         return responseData
     } catch (err: any) {
         console.group("ERROR GETMATCHDATA:\n")
-        console.error(err.config.url, "\n", err.response.status)
+        errorHandler(err)
         console.groupEnd()
     }
 }
@@ -120,20 +138,72 @@ export async function getRanked(server: String, summonerID: String,) {
         return responseData
     } catch (err: any) {
         console.group("ERROR GETRANKED:\n")
-        console.error(err.config.url, "\n", err.response.status)
+        errorHandler(err)
+        console.groupEnd()
+    }
+}
+
+export async function getChampionMasteryByBothID(server: String, summonerId: String, championId: number) {
+    try{
+        //console.log(colors.bgRed(calcAdressCM(server,summonerId,championId)))
+        const responseData = await axios.get(calcAdressCM(server,summonerId,championId));
+        return responseData;
+    } catch (err: any) {
+        console.group("ERROR getChampionMasteryByBothID:\n")
+        errorHandler(err);
+        console.groupEnd()
+    }
+}
+export async function getPlayerEncId(server:String, encrSummonerId: String){
+    const rout = 
+    `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/${encrSummonerId}?api_key=${process.env.RIOTAPIKEY}`
+    try {
+        const responseData = await axios.get(rout)
+        return responseData
+    } catch (err: any) {
+        console.group("ERROR GETPLAYERENCID:\n")
+        errorHandler(err);
         console.groupEnd()
     }
 }
 export async function getPlayer(server: String, summonerName: String,) {
+    //console.log(colors.bold(calcAdress(server,summonerName,'summoner')))
     try {
         const responseData = await axios.get(calcAdress(server, summonerName, 'summoner'))
         return responseData
     } catch (err: any) {
         console.group("ERROR GETPLAYER:\n")
-        console.error(err.config.url, "\n", err.response.status)
+        errorHandler(err);
         console.groupEnd()
     }
 }
+
+function calcAdressCM(server: String, summonerId: String, championId: number){
+    server.toLocaleLowerCase()
+    let addres = "https://";
+    switch (server) {
+        case 'br': addres += 'br1'; break;
+        case 'eun': addres += 'eun'; break;
+        case 'euw': addres += 'euw1'; break;
+        case 'jp': addres += 'jp1'; break;
+        case 'kr': addres += 'kr'; break;
+        case 'la': addres += 'la1'; break;
+        case 'na': addres += 'na1'; break;
+        case 'oc': addres += 'oc1'; break;
+        case 'tr': addres += 'tr1'; break;
+        case 'ru': addres += 'ru'; break;
+    }
+ 
+    addres += '.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/'
+
+    addres += encodeURIComponent(summonerId.valueOf())
+    addres += `/by-champion/${championId}`
+    addres += '?api_key=' + process.env.RIOTAPIKEY
+    return addres
+}
+
+
+
 function calcAdressWeird(server: String, summonerPUUID: String) {
     server.toLocaleLowerCase()
     let addres = "https://"
@@ -173,4 +243,24 @@ function calcAdress(server: String, summonerName: String, type: String) {
     addres += encodeURIComponent(summonerName.toString())
     addres += '?api_key=' + process.env.RIOTAPIKEY
     return addres
+}
+
+function errorHandler(err:any){
+    if (axios.isAxiosError(err)) {
+
+        if (err?.response) {
+            console.warn(err.response.data)
+            console.warn(err.response.status)
+            console.warn(err.response.headers);
+        } else if (err.request) {
+            console.warn(err.request)
+        }
+        else {
+            console.warn(err.message)
+        }
+
+    }
+    else {
+        console.log(colors.bgYellow(`Error: ,${err.message}`))
+    }
 }
