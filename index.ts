@@ -3,12 +3,11 @@ import dotenv from 'dotenv'
 import WOKCommands from 'wokcommands'
 import mongoose from 'mongoose'
 import path from 'path'
-import { getLiveGame, getPlayer, getSummonerNameByDiscordId } from './riotApi/router'
-import { getLiveMatchEmbed } from './riotApi/liveMatch'
 import { checkAndSend, reactionPlayerDetails } from './backGroundFeatures/liveMatchData'
 import { track } from './backGroundFeatures/trackPlayTime'
 import colors from 'colors'
 import { installEmojis } from './riotApi/getEmojis'
+import {SubModel} from './models/subscription'
 dotenv.config()
 
 const client = new DiscordJS.Client({
@@ -39,6 +38,22 @@ client.on('ready', async () => {
 
     //install emojis
     //installEmojis(client);
+
+    //create all subDoc for all Servers active:
+    const allGuildsOAuth = await client.guilds.fetch();
+    const allGuilds = await Promise.all(allGuildsOAuth.map(entry => entry.fetch()))
+    await Promise.all(allGuilds.map(async guild => {
+        
+        await SubModel.findOneAndUpdate({
+            "_guildId": guild.id,
+        },
+        {
+            "_guildId": guild.id
+        },
+        {
+            upsert : true,
+        })
+    }))
 })
 
 client.on('messageCreate', (message) => {
@@ -65,11 +80,11 @@ client.on('presenceUpdate', async (oldPresence, newPresence) => {
 
 client.on('messageReactionAdd', async (reaction, user) => {
     if (!(reaction instanceof DiscordJS.MessageReaction)){
-        console.log('first')
+        
         return;
     }
     else if(user.bot){
-        console.log('second')
+        
         return;
     }
     reactionPlayerDetails(reaction)

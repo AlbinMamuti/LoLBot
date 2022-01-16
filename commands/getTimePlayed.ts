@@ -1,5 +1,4 @@
 import { ICommand } from "wokcommands";
-import subscription from "../models/subscription";
 import timePlayed from "../models/timePlayed";
 
 export default {

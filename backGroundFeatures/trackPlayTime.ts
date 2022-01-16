@@ -24,7 +24,7 @@ export async function track(presence: DiscordJs.Presence) {
         if (PlayerInGame.has(userId)) { //already in list, so Game has ended now
             _DEBUG_ && console.group(colors.cyan('In Track:'), 'Player is in PlayerInGame')
             const game: DiscordJs.Activity | undefined = PlayerInGame.get(userId);
-            _DEBUG_ && console.log(colors.cyan('In Track: const game: '), game)
+            //_DEBUG_ && console.log(colors.cyan('In Track: const game: '), game)
             if (!game || !game.timestamps || !game.timestamps.start) {
                 _DEBUG_ && console.warn(colors.cyan('In Track:'), ' Crash');
                 _DEBUG_ && console.groupEnd();

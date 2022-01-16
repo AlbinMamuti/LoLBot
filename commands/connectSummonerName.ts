@@ -2,7 +2,8 @@ import { MessageEmbed } from "discord.js";
 import { ICommand } from "wokcommands";
 import { getPlayer, getRanked } from "../riotApi/router";
 import summonerNameSchema from "../models/usernames"
-import subscription from "../models/subscription";
+import {SubModel,  IGuildSub } from "../models/subscription";
+import { Model } from "mongoose";
 export default {
 
     category: 'League of Legends User',
@@ -28,19 +29,36 @@ export default {
                 upsert: true,
             })
         msg.reply(`Your Summoner Name has been updated to ${summonerName}`)
-        await subscription
-            .findByIdAndUpdate({
-                _id: user.id,
-                _guild: guildId,
-            }, {
-                _id: user.id,
-                _idDiscord: user.id,
-                _subscription: true,
-                _guildId: guild.id,
-            }, {
-                upsert: true,
+        const d : IGuildSub |null = await SubModel.findOne({
+            "_guildId": guildId,
+            "_allSubscriptions._idDiscord": user.id
+        })
+        if(!d || d === null){
+            const doc : IGuildSub | null = await SubModel
+            .findOne({
+                "_guildId": guildId,
             })
+            
+            if(!doc ||doc === null) {
+                console.warn(`Doc is missing in DB`); 
+                return 
+            }
+            doc._allSubscriptions.push({
+                _idDiscord : user.id,
+                _subscription : true,
+                _guildId : guildId,
+            })
+
+            doc.save()
+            return
+        }
+        d._allSubscriptions.forEach(entry => {
+            if(entry._idDiscord === user.id)
+                entry._subscription = true;
+        })
+        d.save();
     }
+    
 
 
 } as ICommand

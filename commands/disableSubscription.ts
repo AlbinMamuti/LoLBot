@@ -1,5 +1,5 @@
 import { ICommand } from "wokcommands";
-import subscription from "../models/subscription";
+import {IGuildSub, SubModel} from "../models/subscription";
 
 export default {
     category: 'League Of Legends Accout management',
@@ -9,17 +9,34 @@ export default {
     callback: async ({ message, interaction, user, guild }) => {
         if (!user || !guild)
             return '404 Error'
-        await subscription.findOneAndUpdate({
-            _id: user.id,
-            _guildId: guild.id
-        }, {
-            _id: user.id,
-            _idDiscord: user.id,
-            _subscription: false,
-            _guildId: guild.id,
-        }, {
-            upsert: true,
-        });
+ 
+        const d : IGuildSub |null = await SubModel.findOne({
+            "_guildId": guild.id,
+            "_allSubscriptions._idDiscord": user.id
+        })
+        if(!d || d === null){
+            const doc : IGuildSub | null = await SubModel
+            .findOne({
+                "_guildId": guild.id,
+            })
+            
+            if(!doc ||doc === null) {
+                console.warn(`Doc is missing in DB`); 
+                return 
+            }
+            doc._allSubscriptions.push({
+                _idDiscord : user.id,
+                _subscription : false,
+                _guildId : guild.id,
+            })
+            doc.save()
+            return
+        }
+        d._allSubscriptions.forEach(entry => {
+            if(entry._idDiscord === user.id)
+                entry._subscription = false;
+        })
+        d.save();
         return 'Your Subscription has ended and all of your Data is deleted, use /enableSubscription to subscribe again';
     }
 

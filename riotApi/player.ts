@@ -26,7 +26,7 @@ export async function createEmbedPlayer (participant:CurrentGameParticipant, gui
         + `Level: ${SummonerDTO.summonerLevel}\n`;
     for(const entry of SR_Rankeds){
         const emoji = getRankEmoji(guild);
-        if(entry.queueType === 'RANKED_SOLO_5x5'){
+        if(entry.queueType === 'RANKED_SOLO_5x5'){ //DOES NOT WORK !!!
             let temp = entry.tier.charAt(0).toUpperCase() + entry.tier.slice(1).toLocaleLowerCase()
             let rankedString = "Solo/Duo: "+ `${emoji} ` + temp + " " + entry.rank
             let kda = `${entry.wins}W / ${entry.losses}L`
@@ -41,7 +41,7 @@ export async function createEmbedPlayer (participant:CurrentGameParticipant, gui
             descriptionString += rankedString     
         }
     }
-    const emoji = await getEmoji(ChampionMasteryDTO.championLevel.valueOf(),guild); //CHANGE THIS
+    const emoji = await getEmoji(ChampionMasteryDTO.championLevel.valueOf(),guild); 
     //console.log(emoji)
     embed.setDescription(descriptionString);
     const levelString = `${emoji} ${ChampionMasteryDTO.championPoints}`;

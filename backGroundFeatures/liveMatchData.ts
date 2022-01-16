@@ -1,5 +1,5 @@
 import DiscordJs from "discord.js";
-import subscription from "../models/subscription";
+import {IGuildSub, SubModel} from "../models/subscription";
 import { CurrentGameInfo } from "../riotApi/ApiInterfaces/ApiInterfaces";
 import { getLiveMatchEmbed } from "../riotApi/liveMatch";
 import colors from 'colors';
@@ -153,22 +153,21 @@ export async function checkAndSend(newPresence: DiscordJs.Presence) {
 
 async function isSub(userId: String, guildId: String): Promise<Boolean> {
 
-  const user = await subscription.find({
-    _id: userId,
-    _guildId: guildId,
+  const user: IGuildSub | null = await SubModel.findOne({
+    "_guildId": guildId,
+    "_allSubscriptions._idDiscord": userId,
   });
-  console.log(user);
-  if (!user || user.length === 0) {
-    subscription.create({   // create new Entry with default sub to False, can be done async without await
-      _id: userId,
-      _idDiscord: userId,
-      _subscription: false,
-      _guildId: guildId,
-    });
-    return false;
+  
+  if (!user || user === null) {
+    return false
   }
   //console.log(colors.magenta(`${user}`));
-  return user[0]._subscription;
+  let ret = false;
+  user._allSubscriptions.forEach(entry => {
+    if(entry._idDiscord === userId)
+      ret = entry._subscription
+  })
+  return ret;
 }
 
 async function preCheck(newPresence: DiscordJs.Presence) {
