@@ -3,8 +3,9 @@ import DiscordJs from 'discord.js'
 import timePlayed from '../models/timePlayed';
 import colors from 'colors';
 
-const PlayerInGame = new Map<String, DiscordJs.Activity>();
+const PlayerInGame = new Map<String, ActivityWithStatusFlag>();
 const _DEBUG_ = true;
+
 
 /**
  * Function to track League Ingame time for Discord Users who subscribed for this Feature
@@ -18,26 +19,35 @@ export async function track(presence: DiscordJs.Presence) {
     if (!isInLeagueClient(presence.activities)) return;
 
     _DEBUG_ && console.group(colors.cyan('In Track: Entered Function track'))
-
+    _DEBUG_ && console.group(colors.cyan('In Track: '),PlayerInGame)
     if (!isInGame(presence.activities)) {
         _DEBUG_ && console.group(colors.cyan(`In Track: user ${presence.user?.username} is not in a Game`))
         if (PlayerInGame.has(userId)) { //already in list, so Game has ended now
             _DEBUG_ && console.group(colors.cyan('In Track:'), 'Player is in PlayerInGame')
-            const game: DiscordJs.Activity | undefined = PlayerInGame.get(userId);
+            const game: ActivityWithStatusFlag | undefined = PlayerInGame.get(userId);
             //_DEBUG_ && console.log(colors.cyan('In Track: const game: '), game)
-            if (!game || !game.timestamps || !game.timestamps.start) {
+            if (!game || !game.activity.timestamps || !game.activity.timestamps.start) {
                 _DEBUG_ && console.warn(colors.cyan('In Track:'), ' Crash');
                 _DEBUG_ && console.groupEnd();
                 _DEBUG_ && console.groupEnd();
                 _DEBUG_ && console.groupEnd();
                 return;
             }
-            const start: Date = game.timestamps.start;
+            if(game.processed) {
+                _DEBUG_ && console.log(colors.cyan('In Track: Game was already processed, clean exit'))
+                _DEBUG_ && console.groupEnd();
+                _DEBUG_ && console.groupEnd();
+                _DEBUG_ && console.groupEnd();
+                return;
+            }
+            game.processed = true;
+            const start: Date = game.activity.timestamps.start;
             const end: Date = new Date();
             const gameDuration = end.getTime() - start.getTime();
+
             await saveGameDuration(gameDuration, userId, guildId);
-            PlayerInGame.delete(userId);
-            _DEBUG_ && console.log(colors.cyan('In Track: Player deleted and added to DB'))
+            PlayerInGame.delete(userId)
+            _DEBUG_ && console.log(colors.cyan('In Track: Player Flag set to true and deleted and added to DB'))
             _DEBUG_ && console.groupEnd();
         }
         _DEBUG_ && console.groupEnd()
@@ -51,7 +61,11 @@ export async function track(presence: DiscordJs.Presence) {
                 return;
             }
 
-            PlayerInGame.set(userId, lolActivity);
+            PlayerInGame.set(userId, {
+                activity:lolActivity, 
+                processed:false,
+                createdAt: new Date(),
+            });
             _DEBUG_ && console.log(colors.cyan('In Track: Player has been added to PlayerInGame'))
         }
         _DEBUG_ && console.groupEnd()
@@ -103,4 +117,10 @@ export function isInLeagueClient(activities: Array<DiscordJs.Activity>) {
             inClient = true;
     })
     return inClient;
+}
+
+interface ActivityWithStatusFlag {
+    activity: DiscordJs.Activity,
+    processed: Boolean | false,
+    createdAt: Date,
 }

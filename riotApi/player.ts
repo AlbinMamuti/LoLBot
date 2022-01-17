@@ -1,6 +1,7 @@
 import { Client, Emoji, Guild, MessageEmbed } from "discord.js";
 import { ChampionMasteryDTO, CurrentGameParticipant, LeagueEntryDTO, SummonerDTO } from "./ApiInterfaces/ApiInterfaces";
 import { getChampionById, getChampionMasteryByBothID, getPlayer, getPlayerEncId, getRanked } from "./router";
+import colors from 'colors'
 
 export async function createEmbedPlayer (participant:CurrentGameParticipant, guild:Guild|null) :Promise<MessageEmbed>{
     const embed = new MessageEmbed()
@@ -16,6 +17,8 @@ export async function createEmbedPlayer (participant:CurrentGameParticipant, gui
     const SR_Rankeds = RankData.filter((entry) => {
         entry.queueType === 'RANKED_SOLO_5x5' || entry.queueType === 'RANKED_TEAM_5x5'
     })
+    console.log(colors.yellow('In createEmbedPlayer: RankData'),RankData)
+    console.log(colors.yellow('In createEmbedPlayer: SR_Rankeds'),SR_Rankeds)
     const championName = await getChampionById(ChampionMasteryDTO.championId.toString());
     embed.setThumbnail(
         `http://ddragon.leagueoflegends.com/cdn/img/champion/splash/${championName}_0.jpg`
