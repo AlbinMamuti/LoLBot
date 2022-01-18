@@ -8,6 +8,7 @@ import { track } from './backGroundFeatures/trackPlayTime'
 import colors from 'colors'
 import { installEmojis } from './riotApi/getEmojis'
 import {SubModel} from './models/subscription'
+import { initialSetup } from './riotApi/checkSub'
 dotenv.config()
 
 const client = new DiscordJS.Client({
@@ -54,6 +55,7 @@ client.on('ready', async () => {
             upsert : true,
         })
     }))
+    await initialSetup(client);
 })
 
 client.on('messageCreate', (message) => {

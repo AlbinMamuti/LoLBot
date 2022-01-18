@@ -6,6 +6,7 @@ export default {
     description: 'Activate Subscription from LolBot Live ingame Features',
 
     slash: 'both',
+    //THIS NEEDS EDIT: FOR EVERY GUILD WE SHOULD ENABLE OR DISABLE SUBSCIBPTION
     callback: async ({ message, interaction, user, guild }) => {
         if (!user || !guild)
             return '404 Error'
