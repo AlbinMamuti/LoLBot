@@ -55,7 +55,7 @@ client.on('ready', async () => {
             upsert : true,
         })
     }))
-    await initialSetup(client);
+    //await initialSetup(client);
 })
 
 client.on('messageCreate', (message) => {

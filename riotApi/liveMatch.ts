@@ -40,8 +40,15 @@ export async function getLiveMatchEmbed(liveMatch: CurrentGameInfo, server: Stri
     enemyTeam.forEach((element: Player) => {
         allPlayers.push(element.puuid)
     })
+    
     const RankInfoArray = await getRankeds(server, allPlayers)
     for (let i = 0; i < RankInfoArray.length - enemyTeam.length; i++) {
+        if(!RankInfoArray[i]){
+            const index = i - enemyTeam.length
+            myTeam[index].soloRank = `unranked`
+            myTeam[index].wins = 0
+            myTeam[index].losses = 0
+        }
         RankInfoArray[i].forEach((entry: LeagueEntryDTO) => {
             if (entry.queueType === 'RANKED_SOLO_5x5') {
                 myTeam[i].soloRank = `${entry.tier.charAt(0) + entry.tier.slice(1).toLocaleLowerCase()} ${entry.rank}`
@@ -51,6 +58,12 @@ export async function getLiveMatchEmbed(liveMatch: CurrentGameInfo, server: Stri
         })
     }
     for (let i = RankInfoArray.length - myTeam.length; i < RankInfoArray.length; i++) {
+        if(!RankInfoArray[i]){
+            const index = i - enemyTeam.length
+            enemyTeam[index].soloRank = `unranked`
+            enemyTeam[index].wins = 0
+            enemyTeam[index].losses = 0
+        }
         RankInfoArray[i].forEach((entry: LeagueEntryDTO) => {
             if (entry.queueType === 'RANKED_SOLO_5x5') {
                 const index = i - enemyTeam.length
@@ -66,7 +79,7 @@ export async function getLiveMatchEmbed(liveMatch: CurrentGameInfo, server: Stri
     let description: String = "```asciidoc\n"
     description += `= Summoner${" ".repeat(18 - 8)}Champion${" ".repeat(8)}RankedSolo${" ".repeat(6)}W/L =\n\n`
     for (let i = 0; i < myTeam.length; i++) {
-        description += `  ${myTeam[i].name + (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(18 - myTeam[i].name.length - (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 4 : 0))}`; //PlayerName with indication who is who
+        description += `  ${myTeam[i].name + (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <' : '')}${" ".repeat(18 - myTeam[i].name.length - (myTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 2 : 0))}`; //PlayerName with indication who is who
         //console.log(myTeam[i])
         const championPlayed: String = await getChampionById(myTeam[i].championPlayed.toString())
         description += `${championPlayed}${" ".repeat(16 - championPlayed.length)}`;
@@ -78,7 +91,7 @@ export async function getLiveMatchEmbed(liveMatch: CurrentGameInfo, server: Stri
     }
     description += `\n`
     for (let i = 0; i < enemyTeam.length; i++) {
-        description += `  ${enemyTeam[i].name + (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <--' : '')}${" ".repeat(18 - enemyTeam[i].name.length - (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 4 : 0))}`; //PlayerName with indication who is who
+        description += `  ${enemyTeam[i].name + (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? ' <' : '')}${" ".repeat(18 - enemyTeam[i].name.length - (enemyTeam[i].name.toLocaleLowerCase() === summonerName.toLocaleLowerCase() ? 2 : 0))}`; //PlayerName with indication who is who
         const championPlayed: String = await getChampionById(enemyTeam[i].championPlayed.toString())
         //console.log(championPlayed.length)
         description += `${championPlayed}${" ".repeat(16 - championPlayed.length)}`;

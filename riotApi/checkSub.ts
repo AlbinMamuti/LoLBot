@@ -15,6 +15,7 @@ export async function initialSetup(client: Client) {
         const d : IGuildSub | null = await SubModel.findOne({
             "_guildId": guild.id,
         })
+        //THIS CODE DOESNT WORK LIKE INTENTED UPSI DAISY
         //console.log(d)
         users.forEach((user) => {
             const userId = user.id
@@ -27,7 +28,7 @@ export async function initialSetup(client: Client) {
             d?._allSubscriptions.push({
                 _guildId: guild.id,
                 _idDiscord: userId,
-                _subscription: false,
+                _subscription: true,
             })
         })
         //console.log(d, "Ready to safe")

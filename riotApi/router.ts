@@ -7,11 +7,17 @@ import maps from './maps.json'
 import { LeagueEntryDTO } from './ApiInterfaces/ApiInterfaces'
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
-const getVersion = async () => { try { return (await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')).data[0] } catch (err) { } };
+const getVersion = async () => { 
+    try { 
+        return (await axios.get('https://ddragon.leagueoflegends.com/api/versions.json')).data[0] } 
+        catch (err) { 
+            console.log("In GetVersion",err)
+        } 
+    };
 //const currVersion = await getVersion();
 let currVersion: string
 let champions: any
-const getChampions = async () => { try { return await axios.get(`http://ddragon.leagueoflegends.com/cdn/${currVersion}/data/en_US/champion.json`) } catch (err) { console.log(err) } };
+const getChampions = async () => { try { return await axios.get(`http://ddragon.leagueoflegends.com/cdn/${currVersion}/data/en_US/champion.json`) } catch (err) { console.log("In GetChampion",err) } };
 //const champions = await getChampions();
 
 export async function getSummonerNameByDiscordId(discordId: String) {
@@ -41,7 +47,7 @@ export async function getChampionById(championId: string) {
 }
 //getRankeds('euw', ['qDbDCA6JRy1UMfRyDm6w3ygDQx-hL7rbYrxZDB0hk0iRh0Q', 'qDbDCA6JRy1UMfRyDm6w3ygDQx-hL7rbYrxZDB0hk0iRh0Q']);
 
-export async function getRankeds(server: String, summoners: String[]) {
+export async function getRankeds(server: String, summoners: String[], tryTime?: number) : Promise<LeagueEntryDTO[][]> {
     const endpoints: String[] = summoners.map((summoner: String) => {
         return calcAdress(server, summoner, 'rank');
     });
@@ -53,8 +59,18 @@ export async function getRankeds(server: String, summoners: String[]) {
         return responeData;
     } catch (err: any) {
         console.group("ERROR GETALLRANKDES:\n")
-        errorHandler(err)
+        const errorCode = errorHandler(err)
         console.groupEnd()
+        
+            if(tryTime && tryTime > 2)
+                return []
+            let tries = 0;
+            console.log("Trying again in 30 seconds")
+            await sleep(1000*30)
+            const responseData = await getRankeds(server,summoners,(tries++));
+            return responseData
+        
+        
         return [];
     }
 }
@@ -244,7 +260,9 @@ function calcAdress(server: String, summonerName: String, type: String) {
     addres += '?api_key=' + process.env.RIOTAPIKEY
     return addres
 }
-
+function sleep(ms:number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 function errorHandler(err:any){
     if (axios.isAxiosError(err)) {
 
@@ -252,6 +270,7 @@ function errorHandler(err:any){
             console.warn(err.response.data)
             console.warn(err.response.status)
             console.warn(err.response.headers);
+            return err.response.status
         } else if (err.request) {
             console.warn(err.request)
         }
@@ -263,4 +282,5 @@ function errorHandler(err:any){
     else {
         console.log(colors.bgYellow(`Error: ,${err.message}`))
     }
+    return -1
 }
